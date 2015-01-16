@@ -163,7 +163,116 @@ public class AStarPathFinder implements PathFinder {
 		Path path = new Path();
 		Node target = nodes[tx][ty];
 		while (target != nodes[sx][sy]) {
-			path.prependStep(target.x, target.y);
+			if (target != nodes[tx][ty]) path.prependStep(target.x, target.y);
+			target = target.parent;
+		}
+		path.prependStep(sx,sy);
+		
+		// thats it, we have our path 
+		return path;
+	}
+	
+	public Path findPathNoCollision(Mover mover, int sx, int sy, int tx, int ty, Path collisionPath) {
+		// easy first check, if the destination is blocked, we can't get there
+		if (map.blocked(mover, tx, ty)) {
+			return null;
+		}
+		
+		// initial state for A*. The closed group is empty. Only the starting
+		// tile is in the open list and it's cost is zero, i.e. we're already there
+		nodes[sx][sy].cost = 0;
+		nodes[sx][sy].depth = 0;
+		closed.clear();
+		open.clear();
+		open.add(nodes[sx][sy]);
+		
+		nodes[tx][ty].parent = null;
+		
+		// while we haven't found the goal and haven't exceeded our max search depth
+		int maxDepth = 0;
+		boolean collisionFlag;
+		while ((maxDepth < maxSearchDistance) && (open.size() != 0)) {
+			// pull out the first node in our open list, this is determined to 
+			// be the most likely to be the next step based on our heuristic
+			Node current = getFirstInOpen();
+			if (current == nodes[tx][ty]) {
+				break;
+			}
+			
+			removeFromOpen(current);
+			addToClosed(current);
+			
+			// search through all the neighbours of the current node evaluating
+			// them as next steps
+			for (int x=-1;x<2;x++) {
+				for (int y=-1;y<2;y++) {
+					// not a neighbour, its the current tile
+					if ((x == 0) && (y == 0)) {
+						continue;
+					}
+					
+					// if we're not allowing diaganol movement then only 
+					// one of x or y can be set
+					if (!allowDiagMovement) {
+						if ((x != 0) && (y != 0)) {
+							continue;
+						}
+					}
+					
+					// determine the location of the neighbour and evaluate it
+					int xp = x + current.x;
+					int yp = y + current.y;
+					
+					collisionFlag = (current.getDepth > collisionPath.getLength) || ((xp != collisionPath.getX(current.getDepth)) || (yp != collisionPath.getY(current.getDepth)));
+					
+					if ((isValidLocation(mover,sx,sy,xp,yp)) && collisionFlag) { //Second condition checks for collisions {
+						// the cost to get to this node is cost the current plus the movement
+						// cost to reach this node. Note that the heursitic value is only used
+						// in the sorted open list
+						float nextStepCost = current.cost + getMovementCost(mover, current.x, current.y, xp, yp);
+						Node neighbour = nodes[xp][yp];
+						map.pathFinderVisited(xp, yp);
+						
+						// if the new cost we've determined for this node is lower than 
+						// it has been previously makes sure the node hasn't been discarded. We've
+						// determined that there might have been a better path to get to
+						// this node so it needs to be re-evaluated
+						if (nextStepCost < neighbour.cost) {
+							if (inOpenList(neighbour)) {
+								removeFromOpen(neighbour);
+							}
+							if (inClosedList(neighbour)) {
+								removeFromClosed(neighbour);
+							}
+						}
+						
+						// if the node hasn't already been processed and discarded then
+						// reset it's cost to our current cost and add it as a next possible
+						// step (i.e. to the open list)
+						if (!inOpenList(neighbour) && !(inClosedList(neighbour))) {
+							neighbour.cost = nextStepCost;
+							neighbour.heuristic = getHeuristicCost(mover, xp, yp, tx, ty);
+							maxDepth = Math.max(maxDepth, neighbour.setParent(current));
+							addToOpen(neighbour);
+						}
+					}
+				}
+			}
+		}
+
+		// since we've got an empty open list or we've run out of search 
+		// there was no path. Just return null
+		if (nodes[tx][ty].parent == null) {
+			return null;
+		}
+		
+		// At this point we've definitely found a path so we can uses the parent
+		// references of the nodes to find out way from the target location back
+		// to the start recording the nodes on the way.
+		Path path = new Path();
+		Node target = nodes[tx][ty];
+		while (target != nodes[sx][sy]) {
+			if (target != nodes[tx][ty]) path.prependStep(target.x, target.y);
 			target = target.parent;
 		}
 		path.prependStep(sx,sy);
