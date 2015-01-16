@@ -223,7 +223,7 @@ public class AStarPathFinder implements PathFinder {
 					int xp = x + current.x;
 					int yp = y + current.y;
 					
-					collisionFlag = (current.getDepth > collisionPath.getLength) || ((xp != collisionPath.getX(current.getDepth)) || (yp != collisionPath.getY(current.getDepth)));
+					collisionFlag = (current.getDepth() > collisionPath.getLength()) || ((xp != collisionPath.getX(current.getDepth)) || (yp != collisionPath.getY(current.getDepth)));
 					
 					if ((isValidLocation(mover,sx,sy,xp,yp)) && collisionFlag) { //Second condition checks for collisions {
 						// the cost to get to this node is cost the current plus the movement
