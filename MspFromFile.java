@@ -50,7 +50,7 @@ public class MapFromFile {
             for (int i = 0;i < numbers[1];i++){
                for (int j= 0;j < numbers[2];j++){
                   value = br.read();       
-                  if ( value == 'X' ){
+                  if ( (char) value == 'X' ){
                      gridmap.setObstacle(i,j);
                      map[i][j] = Boolean.TRUE;
                   }
