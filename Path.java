@@ -6,12 +6,11 @@ import java.util.ArrayList;
  * A path determined by some path finding algorithm. A series of steps from
  * the starting location to the target location. This includes a step for the
  * initial location.
- * 
- * @author Kevin Glass
+ *
  */
 public class Path {
 	/** The list of steps building up this path */
-	private ArrayList steps = new ArrayList();
+	public ArrayList steps = new ArrayList();
 	
 	/**
 	 * Create an empty path
@@ -94,7 +93,6 @@ public class Path {
 	/**
 	 * A single step within the path
 	 * 
-	 * @author Kevin Glass
 	 */
 	public class Step {
 		/** The x coordinate at the given step */
